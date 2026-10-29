@@ -4,6 +4,12 @@ from hitl_reachability_cps.backward import RobustControlAction, compute_backward
 from hitl_reachability_cps.model import StateInterval
 
 
+def _assert_interval(interval: StateInterval | None, lower: float, upper: float) -> None:
+    assert interval is not None
+    assert interval.lower == pytest.approx(lower)
+    assert interval.upper == pytest.approx(upper)
+
+
 def test_backward_sets_shrink_under_uncertain_control_and_disturbance():
     result = compute_backward_recoverable_sets(
         target=StateInterval(0.0, 1.0),
@@ -13,9 +19,9 @@ def test_backward_sets_shrink_under_uncertain_control_and_disturbance():
         horizon_steps=2,
     )
 
-    assert result.predecessor_sets[0] == StateInterval(0.0, 1.0)
-    assert result.predecessor_sets[1] == StateInterval(0.15, 0.85)
-    assert result.predecessor_sets[2] == StateInterval(0.3, 0.7)
+    _assert_interval(result.predecessor_sets[0], 0.0, 1.0)
+    _assert_interval(result.predecessor_sets[1], 0.15, 0.85)
+    _assert_interval(result.predecessor_sets[2], 0.3, 0.7)
     assert result.recoverable_in(StateInterval(0.4, 0.6), 2)
     assert not result.recoverable_in(StateInterval(0.2, 0.6), 2)
 
@@ -29,8 +35,8 @@ def test_backward_sets_are_clipped_to_safe_region():
         horizon_steps=2,
     )
 
-    assert result.predecessor_sets[1] == StateInterval(0.4, 0.9)
-    assert result.predecessor_sets[2] == StateInterval(0.8, 1.0)
+    _assert_interval(result.predecessor_sets[1], 0.4, 0.9)
+    _assert_interval(result.predecessor_sets[2], 0.8, 1.0)
 
 
 def test_empty_predecessor_propagates():
