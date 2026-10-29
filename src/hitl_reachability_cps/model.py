@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
+
+
+def _require_finite(*values: float) -> None:
+    if not all(isfinite(value) for value in values):
+        raise ValueError("model values must be finite")
 
 
 @dataclass(frozen=True)
@@ -9,6 +15,7 @@ class StateInterval:
     upper: float
 
     def __post_init__(self) -> None:
+        _require_finite(self.lower, self.upper)
         if self.lower > self.upper:
             raise ValueError("lower must not exceed upper")
 
@@ -17,6 +24,7 @@ class StateInterval:
         return self.upper - self.lower
 
     def shifted(self, delta_lower: float, delta_upper: float) -> "StateInterval":
+        _require_finite(delta_lower, delta_upper)
         return StateInterval(self.lower + delta_lower, self.upper + delta_upper)
 
     def intersects(self, other: "StateInterval") -> bool:
@@ -31,6 +39,7 @@ class LinearIntervalDynamics:
     drift_upper: float
 
     def __post_init__(self) -> None:
+        _require_finite(self.drift_lower, self.drift_upper)
         if self.drift_lower > self.drift_upper:
             raise ValueError("drift_lower must not exceed drift_upper")
 
@@ -42,6 +51,7 @@ class HumanResponseModel:
     fatigue: float = 0.0
 
     def __post_init__(self) -> None:
+        _require_finite(self.nominal_latency_s, self.workload, self.fatigue)
         if self.nominal_latency_s < 0:
             raise ValueError("nominal_latency_s must be non-negative")
         if not 0.0 <= self.workload <= 1.0:
@@ -60,7 +70,10 @@ class ReachabilityConfig:
     horizon_steps: int = 30
 
     def __post_init__(self) -> None:
+        _require_finite(self.step_duration_s)
         if self.step_duration_s <= 0:
             raise ValueError("step_duration_s must be positive")
+        if not isinstance(self.horizon_steps, int) or isinstance(self.horizon_steps, bool):
+            raise ValueError("horizon_steps must be an integer")
         if self.horizon_steps < 1:
             raise ValueError("horizon_steps must be positive")
