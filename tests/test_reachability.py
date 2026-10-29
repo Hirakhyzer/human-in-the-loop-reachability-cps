@@ -1,3 +1,5 @@
+import pytest
+
 from hitl_reachability_cps import (
     LinearIntervalDynamics,
     ReachabilityConfig,
@@ -15,7 +17,8 @@ def test_reachable_interval_propagates_conservatively():
         config=ReachabilityConfig(step_duration_s=1.0, horizon_steps=5),
     )
     assert trace[0].interval == StateInterval(0.0, 0.1)
-    assert trace[3].interval == StateInterval(0.3, 0.7)
+    assert trace[3].interval.lower == pytest.approx(0.3)
+    assert trace[3].interval.upper == pytest.approx(0.7)
     assert not trace[3].unsafe
     assert trace[4].unsafe
 
