@@ -57,7 +57,7 @@ def test_safe_arrival_can_still_lack_certified_recovery():
         trace,
         StateInterval(0.8, 2.0),
         HumanResponseModel(nominal_latency_s=2.0),
-        (RecoveryAction("weak-action", -0.01, 0.0),),
+        (RecoveryAction("weak-action", 0.3, 0.4),),
         config=config,
     )
     assert not result.recoverable
