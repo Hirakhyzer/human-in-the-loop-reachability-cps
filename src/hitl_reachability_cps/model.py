@@ -25,6 +25,8 @@ class StateInterval:
 
     def shifted(self, delta_lower: float, delta_upper: float) -> "StateInterval":
         _require_finite(delta_lower, delta_upper)
+        if delta_lower > delta_upper:
+            raise ValueError("delta_lower must not exceed delta_upper")
         return StateInterval(self.lower + delta_lower, self.upper + delta_upper)
 
     def intersects(self, other: "StateInterval") -> bool:
