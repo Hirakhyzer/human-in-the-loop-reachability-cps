@@ -31,3 +31,10 @@ def test_first_unsafe_step_returns_none_when_horizon_is_safe():
         config=ReachabilityConfig(horizon_steps=3),
     )
     assert first_unsafe_step(trace) is None
+
+
+def test_interval_shift_rejects_reversed_effect_bounds():
+    # A wide state interval could otherwise hide reversed shift bounds and
+    # silently produce a numerically valid but semantically invalid interval.
+    with pytest.raises(ValueError, match="delta_lower"):
+        StateInterval(0.0, 10.0).shifted(5.0, -5.0)
