@@ -30,10 +30,16 @@ Latest safe intervention window
 
 - **Reachable set** — conservative interval of states the CPS can occupy after each time step.
 - **Unsafe set** — region representing unacceptable physical states.
-- **Human arrival time** — operator latency adjusted by workload and fatigue.
+- **Human arrival time** — operator latency adjusted by workload and fatigue, rounded up to the configured discrete-time step for conservative analysis.
 - **Recoverability** — whether the entire reachable interval at human arrival can be moved outside the unsafe set by a candidate recovery action.
-- **Latest safe request time** — latest intervention-request point that still leaves enough time for the operator to respond before unsafe entry.
-- **Intervention slack** — time remaining between effective operator response and first predicted unsafe entry.
+- **Latest safe request time** — latest intervention-request point that still leaves enough time for the operator to respond before unsafe entry. If even a request at time zero cannot beat the first predicted unsafe step, no latest-safe request exists and the result reports `None` rather than incorrectly returning time zero.
+- **Intervention slack** — time remaining between effective operator response and first predicted unsafe entry. Negative slack means the modeled operator response is already slower than the predicted safety deadline.
+
+### Analysis-horizon semantics
+
+Recoverability is only certified within the supplied finite reachability trace. If the conservative operator-arrival step lies beyond the analyzed horizon, the analyzer returns `human-arrival-outside-analysis-horizon` and does **not** clamp the human to the final simulated step. In that case `recoverable=False` means *not certified by the available horizon*, not proof that recovery is impossible after the horizon.
+
+The trace timing must also match the supplied `ReachabilityConfig`; mismatched step durations are rejected so operator latency cannot accidentally be interpreted against a different time grid.
 
 ## Example
 
@@ -83,6 +89,8 @@ That distinction separates:
 ## Initial scope
 
 Version 0.1 uses transparent one-dimensional interval dynamics so the semantics are easy to inspect and test. The architecture is intended to grow toward multidimensional linear systems, bounded disturbances, backward-reachable recovery sets, control-invariant safe sets, and runtime-assurance integration.
+
+The current interval implementation also validates that lower/upper effect bounds are ordered and finite. This prevents a wide state interval from masking semantically invalid reversed action or disturbance bounds.
 
 ## Development
 
